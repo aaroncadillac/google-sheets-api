@@ -3,17 +3,15 @@ const fs = require('fs'),
       google = require('googleapis'),
       googleAuth = require('google-auth-library');
 
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
-// Directorio para guardado de tokens
+// Path for tokens
 const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/';
 const TOKEN_PATH = TOKEN_DIR + 'sheets.googleapis.com-nodejs.json';
 
-// Direcctorio para almacenamiento de credencial para cliente secreto
-// Las credenciales deben estar almacenadas en ~/google/sheets
 const IAM = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.google/secret/';
 
-// Carga del cliente secreto desde la llave, predefinida para ello
+// Load client
 fs.readFile(IAM + 'gssecret.json', function processClientSecrets(err, content) {
   if (err) {
     console.log('Error loading client secret file: ' + err);
@@ -21,7 +19,7 @@ fs.readFile(IAM + 'gssecret.json', function processClientSecrets(err, content) {
   }
   // Authorize a client with the loaded credentials, then call the
   // Google Sheets API.
-  authorize(JSON.parse(content), listMajors);
+  authorize(JSON.parse(content), addValues);
 });
 
 /**
@@ -98,33 +96,55 @@ function storeToken(token) {
   console.log('Token stored to ' + TOKEN_PATH);
 }
 
+function createRequest() {
+  
+  var request = {};
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  rl.question('Enter a valid SpreadSheetID (You must have w/r permissions): ', function(code) {
+    rl.close();
+    request.spreadsheetId = code;
+    rl.question("Enter path for JSON: ", function(path) {
+      rl.close();
+      request.requestBody = fs.readFileSync(path);
+    });
+  });
+}
 /**
  * Print the names and majors of students in a sample spreadsheet:
  * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
  */
-function listMajors(auth) {
+function addValues(auth) {
   var sheets = google.sheets('v4');
-  sheets.spreadsheets.values.get({
+
+  val = Object.assign({
+    majorDimension: "ROWS",
+    values: [
+      ["Hello","Google","Sheets"]
+    ]
+  },sheets.spreadsheets.values)
+
+  //console.log("",val)
+
+  val.append({
     auth: auth,
-    spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
-    range: 'Class Data!A2:E',
-  }, function(err, response) {
+    range: "A1",
+    spreadsheetId: '1bhXbigMkNyTgKFVePZIwP5VZE1hN0XcvTRdeFdUSUdo',
+    includeValuesInResponse: true,
+    insertDataOption: "INSERT_ROWS",
+    responseDateTimeRenderOption: "FORMATTED_STRING",
+    responseValueRenderOption: "UNFORMATTED_VALUE",
+    valueInputOption: "RAW"
+  }, function(err, response){
     if (err) {
       console.log('The API returned an error: ' + err);
       return;
     }
-    var rows = response.values;
-    if (rows.length == 0) {
-      console.log('No data found.');
-    } else {
-      console.log('Name, Major:');
-      for (var i = 0; i < rows.length; i++) {
-        var row = rows[i];
-        // Print columns A and E, which correspond to indices 0 and 4.
-        console.log('%s, %s', row[0], row[4]);
-      }
-    }
-  });
+    console.log(response);
+  })
 }
 
 
