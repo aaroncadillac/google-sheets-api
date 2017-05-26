@@ -1,0 +1,30 @@
+{
+  "name": "googlesheetsapi",
+  "version": "1.0.0",
+  "description": "A little and simple probe for the use of Google Sheets API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aaroncadillac/google-sheets-api.git"
+  },
+  "keywords": [
+    "Google",
+    "GoogleAPI",
+    "Node",
+    "SandBox",
+    "TimeKill"
+  ],
+  "author": "Aarón Gabriel Hinojosa Maya",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/aaroncadillac/google-sheets-api/issues"
+  },
+  "homepage": "https://github.com/aaroncadillac/google-sheets-api#readme",
+  "dependencies": {
+    "google-auth-library": "^0.10.0",
+    "googleapis": "^19.0.0"
+  }
+}
