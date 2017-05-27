@@ -2,7 +2,7 @@
   "name": "googlesheetsapi",
   "version": "1.0.0",
   "description": "A little and simple probe for the use of Google Sheets API",
-  "main": "index.js",
+  "main": "quick.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
