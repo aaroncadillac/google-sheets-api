@@ -19,7 +19,7 @@ fs.readFile(IAM + 'gssecret.json', function processClientSecrets(err, content) {
   }
   // Authorize a client with the loaded credentials, then call the
   // Google Sheets API.
-  authorize(JSON.parse(content), addValues);
+  authorize(JSON.parse(content), createRequest);
 });
 
 /**
@@ -96,56 +96,43 @@ function storeToken(token) {
   console.log('Token stored to ' + TOKEN_PATH);
 }
 
-function createRequest() {
+function createRequest(auth) {
+  request = {
+    auth: auth
+  };
   
-  var request = {};
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
 
   rl.question('Enter a valid SpreadSheetID (You must have w/r permissions): ', function(code) {
-    rl.close();
     request.spreadsheetId = code;
     rl.question("Enter path for JSON: ", function(path) {
       rl.close();
-      request.requestBody = fs.readFileSync(path);
+      request.resource = JSON.parse(fs.readFileSync(path, 'utf8'));
+      addValues(request)
     });
   });
 }
-/**
- * Print the names and majors of students in a sample spreadsheet:
- * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
- */
-function addValues(auth) {
+
+function addValues(requestJSON) {
   var sheets = google.sheets('v4');
-
-  val = Object.assign({
-    majorDimension: "ROWS",
-    values: [
-      ["Hello","Google","Sheets"]
-    ]
-  },sheets.spreadsheets.values)
-
-  //console.log("",val)
-
-  val.append({
-    auth: auth,
+  sendObject = Object.assign({
     range: "A1",
-    spreadsheetId: '1bhXbigMkNyTgKFVePZIwP5VZE1hN0XcvTRdeFdUSUdo',
     includeValuesInResponse: true,
     insertDataOption: "INSERT_ROWS",
     responseDateTimeRenderOption: "FORMATTED_STRING",
     responseValueRenderOption: "UNFORMATTED_VALUE",
     valueInputOption: "RAW"
-  }, function(err, response){
+  },requestJSON);
+  sheets.spreadsheets.values.append(sendObject, function(err, response){
     if (err) {
       console.log('The API returned an error: ' + err);
       return;
     }
     console.log(response);
   })
+
+  //console.log(sendObject.resource)
 }
-
-
-
