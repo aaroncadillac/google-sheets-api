@@ -1,7 +1,7 @@
 {
   "values": [
     ["Hello", "Google", "Sheets"],
-    ["This is my first add"]
+    ["This is my first add"],
     ["Can", "I", "add", "multiple", "rows", "and", "use", "multiple", "cols"]
   ]
 }
