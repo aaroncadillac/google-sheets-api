@@ -4,8 +4,15 @@ const fs = require('fs'),
       googleAuth = require('google-auth-library'),
       SCOPES = ['https://www.googleapis.com/auth/spreadsheets'],
       AWS = require('aws-sdk'),
-      S3 = AWS.S3();
+      S3 = new AWS.S3();
 
+const done = (err, res) => callback(null, {
+        statusCode: err ? '400' : '200',
+        body: err ? err.message : JSON.stringify(res),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
 function getS3Obj(key, callback){
   var paramsS3Object = {
     Bucket: 'coconutt-website', /* required */
@@ -23,15 +30,7 @@ function getS3Obj(key, callback){
 
 exports.handler = (event, context, callback) => {
     //console.log('Received event:', JSON.stringify(event, null, 2));
-
-    const done = (err, res) => callback(null, {
-        statusCode: err ? '400' : '200',
-        body: err ? err.message : JSON.stringify(res),
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    });
-
+     console.log(event.httpMethod)
     switch (event.httpMethod) {
         case 'POST':
           // Load client
@@ -40,6 +39,7 @@ exports.handler = (event, context, callback) => {
               authorize(data, createRequest, event);
             }
           });
+          done(null, {success: "esto si funciona pero no lo sabes usar"});
             break;
         default:
             done(new Error(`Unsupported method "${event.httpMethod}"`));
@@ -71,11 +71,11 @@ function createRequest(auth,event) {
   };
 
   for (key in event) {
-    resource.push(event.key);
+    resourceArray.push(event.key);
   }
 
-  request.reosurce = [
-    resourceArray;
+  request.resource = [
+    resourceArray
   ]
 
   addValues(requestJSON)
