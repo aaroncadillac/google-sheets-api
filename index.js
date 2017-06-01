@@ -6,79 +6,83 @@ const fs = require('fs'),
       AWS = require('aws-sdk'),
       S3 = new AWS.S3();
 
-const done = (err, res) => callback(null, {
+function getS3Obj(key, callback){
+  var paramsS3Object = {
+    Bucket: 'coconutt-website',
+    Key: key,
+    ResponseContentEncoding: 'utf8',
+    ResponseContentType: 'application/json'
+  };
+  S3.getObject(paramsS3Object, function(err, data) {
+    if (err) {
+      console.log('ERROR ===========>\n\n',err,'\n\n');
+      console.log(err, err.stack); // an error occurred
+    }
+    else {
+      callback(JSON.parse(data.Body.toString('utf-8')));
+    } 
+  });
+}
+
+exports.handler = (event, context, callback) => {
+    //console.log('Received event:', JSON.stringify(event, null, 2));
+    const done = (err, res) => callback(null, {
         statusCode: err ? '400' : '200',
         body: err ? err.message : JSON.stringify(res),
         headers: {
             'Content-Type': 'application/json'
         }
     });
-function getS3Obj(key, callback){
-  var paramsS3Object = {
-    Bucket: 'coconutt-website', /* required */
-    Key: key, /* required */
-    ResponseContentEncoding: 'utf8',
-    ResponseContentType: 'application/json',
-    SSECustomerAlgorithm: 'AES256'
-  };
 
-  s3.getObject(params, function(err, data) {
-    if (err) console.log(err, err.stack); // an error occurred
-    else data;         // successful response
-  });
-}
-
-exports.handler = (event, context, callback) => {
-    //console.log('Received event:', JSON.stringify(event, null, 2));
-     console.log(event.httpMethod)
     switch (event.httpMethod) {
         case 'POST':
           // Load client
-          getS3Obj('gssectret,json', function (data = null) {
+          getS3Obj('tokens/gssecret.json', function (data = null) {
             if (data) {
-              authorize(data, createRequest, event);
+              authorize(data, createRequest, event.body);
             }
           });
-          done(null, {success: "esto si funciona pero no lo sabes usar"});
-            break;
+          done(null, {success: "WebForm recived"})
+        break;
         default:
             done(new Error(`Unsupported method "${event.httpMethod}"`));
     }
 };
 
-function authorize(credentials, callback) {
+function authorize(credentials, callback, body) {
   var clientSecret = credentials.installed.client_secret;
   var clientId = credentials.installed.client_id;
   var redirectUrl = credentials.installed.redirect_uris[0];
   var auth = new googleAuth();
   var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
 
-  getS3Obj('sheets.googleapis.com-nodejs.json', function (data = null) {
+  getS3Obj('tokens/sheets.googleapis.com-nodejs.json', function (data = null) {
     if (data) {
-      oauth2Client.credentials = JSON.parse(token);
-      callback(oauth2Client,event);
+      oauth2Client.credentials = data;
+      callback(oauth2Client, body);
     }
   });
 }
 
-function createRequest(auth,event) {
+function createRequest(auth, body) {
   
   var resourceArray = [];
-  
+  body = JSON.parse(body);
+
   var request = {
     auth: auth,
-    spreadsheetId: '1bhXbigMkNyTgKFVePZIwP5VZE1hN0XcvTRdeFdUSUdo'
+    spreadsheetId: '13kt5fmjtza2kPbx4vY7dhwPtrZlPPNKjs8ooEvwek8Q'
   };
 
-  for (key in event) {
-    resourceArray.push(event.key);
+  for (key in body) {
+    resourceArray.push(body[key]);
   }
 
-  request.resource = [
-    resourceArray
-  ]
+  request.resource = {
+    values: [ resourceArray ]
+  }
 
-  addValues(requestJSON)
+  addValues(request)
 }
 
 function addValues(requestJSON) {
@@ -91,6 +95,8 @@ function addValues(requestJSON) {
     responseValueRenderOption: "UNFORMATTED_VALUE",
     valueInputOption: "RAW"
   },requestJSON);
+
+  console.log(sendObject)
   sheets.spreadsheets.values.append(sendObject, function(err, response){
     if (err) {
       console.log('The API returned an error: ' + err);
